@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vermeil AI Chatbot</title>
+    <style>
+        :root {
+            --vermeil-red: #8b0000;
+            --vermeil-gold: #ffd700;
+            --vermeil-purple: #4b0082;
+            --dark-bg: #1a001a;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #2d002d 100%);
+            color: #fff;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, var(--vermeil-red), var(--vermeil-purple));
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 3px solid var(--vermeil-gold);
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        /* LOCK SCREEN */
+        .lock-screen {
+            text-align: center;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 3px solid var(--vermeil-red);
+        }
+        
+        .lock-screen h2 {
+            color: var(--vermeil-gold);
+            margin-bottom: 20px;
+        }
+        
+        #password-input {
+            padding: 15px;
+            font-size: 1.2rem;
+            width: 300px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--vermeil-gold);
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        #unlock-button {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, var(--vermeil-red), var(--vermeil-purple));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            border: 2px solid var(--vermeil-gold);
+        }
+        
+        .error-message {
+            color: #ff4444;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        /* API KEY SECTION */
+        .api-key-section {
+            background: rgba(0, 100, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #00ff00;
+            display: none;
+        }
+        
+        #api-key-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--vermeil-purple);
+            color: white;
+            border-radius: 5px;
+        }
+        
+        #save-api-button {
+            padding: 10px 20px;
+            background: #008800;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        /* CHAT INTERFACE */
+        #chat-interface {
+            display: none;
+        }
+        
+        .character-display {
+            display: flex;
+            gap: 30px;
+            background: rgba(139, 0, 0, 0.2);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 2px solid var(--vermeil-gold);
+        }
+        
+        .character-image {
+            flex: 0 0 200px;
+        }
+        
+        .character-image img {
+            width: 200px;
+            height: 300px;
+            border-radius: 10px;
+            border: 3px solid var(--vermeil-gold);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            object-fit: cover;
+        }
+        
+        .messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: rgba(26, 0, 26, 0.8);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid var(--vermeil-purple);
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .message.user {
+            flex-direction: row-reverse;
+        }
+        
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .vermeil-avatar {
+            background: linear-gradient(135deg, var(--vermeil-red), var(--vermeil-purple));
+            border: 2px solid var(--vermeil-gold);
+        }
+        
+        .user-avatar {
+            background: linear-gradient(135deg, #0066cc, #004d99);
+            border: 2px solid #66b3ff;
+        }
+        
+        .message-content {
+            max-width: 70%;
+            padding: 12px 18px;
+            border-radius: 15px;
+        }
+        
+        .vermeil-message {
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.9), rgba(75, 0, 130, 0.9));
+            border: 1px solid var(--vermeil-gold);
+            color: #ffccff;
+        }
+        
+        .user-message {
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.9), rgba(0, 77, 153, 0.9));
+            border: 1px solid #66b3ff;
+            color: white;
+        }
+        
+        .input-area {
+            display: flex;
+            gap: 15px;
+        }
+        
+        #message-input {
+            flex: 1;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--vermeil-purple);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        #send-button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, var(--vermeil-red), var(--vermeil-purple));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 2px solid var(--vermeil-gold);
+        }
+        
+        .typing {
+            display: flex;
+            gap: 5px;
+            padding: 10px;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--vermeil-gold);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes typing {
+            0%, 100% { opacity: 0.2; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(-5px); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Lock Screen -->
+    <div class="lock-screen" id="lock-screen">
+        <h2><i class="fas fa-lock"></i> Vermeil's Chamber</h2>
+        <p>Enter the secret password to summon Vermeil:</p>
+        <input type="password" id="password-input" placeholder="Password: yourzhou">
+        <button id="unlock-button">
+            <i class="fas fa-unlock"></i> Summon Vermeil
+        </button>
+        <div class="error-message" id="error-message">
+            ❌ Wrong password! Try again.
+        </div>
+    </div>
+    
+    <!-- API Key Input (shown after password) -->
+    <div class="api-key-section" id="api-key-section">
+        <h3><i class="fas fa-key"></i> Enter Your Groq API Key</h3>
+        <p>Get your free API key from <a href="https://console.groq.com" target="_blank" style="color: #00ff00;">console.groq.com</a></p>
+        <input type="password" id="api-key-input" placeholder="Paste your Groq API key here (starts with gsk_)">
+        <button id="save-api-button">
+            <i class="fas fa-save"></i> Save Key
+        </button>
+        <p style="font-size: 0.9rem; color: #aaa; margin-top: 10px;">
+            Your key is stored locally in your browser only. Never share it!
+        </p>
+    </div>
+    
+    <!-- Chat Interface (shown after API key is saved) -->
+    <div id="chat-interface">
+        <div class="header">
+            <h1>
+                <i class="fas fa-fire"></i>
+                Vermeil AI Chatbot
+                <i class="fas fa-heart"></i>
+            </h1>
+            <p>The seductive demon from Vermeil in Gold - Now in AI form!</p>
+        </div>
+        
+        <div class="character-display">
+            <div class="character-image">
+                <img src="https://files.catbox.moe/3nanar.jpg" 
+                     alt="Vermeil" 
+                     onerror="this.src='https://files.catbox.moe/3sffxu.jpeg'">
+            </div>
+            <div class="character-info">
+                <h2>👿 Vermeil - The Seductive Demon</h2>
+                <p><strong>Role:</strong> Powerful Demon & Zhou's Eternal Wife</p>
+                <p><strong>Personality:</strong> Seductive, playful, deeply loyal to Zhou</p>
+                <p><strong>Special Note:</strong> While originally summoned by Alto, Vermeil's heart belongs to Zhou, her one and only husband.</p>
+            </div>
+        </div>
+        
+        <div class="chat-container">
+            <div class="messages" id="messages">
+                <!-- Messages appear here -->
+            </div>
+            
+            <div class="input-area">
+                <input type="text" id="message-input" placeholder="Type your message to Vermeil... (Press Enter to send)">
+                <button id="send-button">
+                    <i class="fas fa-paper-plane"></i> Send
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Vermeil AI Chatbot - WORKING VERSION
+        class VermeilChatbot {
+            constructor() {
+                this.apiKey = localStorage.getItem('vermeil_api_key') || '';
+                this.conversation = [];
+                this.isUnlocked = false;
+                
+                // DOM Elements
+                this.passwordInput = document.getElementById('password-input');
+                this.unlockButton = document.getElementById('unlock-button');
+                this.errorMessage = document.getElementById('error-message');
+                this.apiKeySection = document.getElementById('api-key-section');
+                this.apiKeyInput = document.getElementById('api-key-input');
+                this.saveApiButton = document.getElementById('save-api-button');
+                this.chatInterface = document.getElementById('chat-interface');
+                this.messageInput = document.getElementById('message-input');
+                this.sendButton = document.getElementById('send-button');
+                this.messagesContainer = document.getElementById('messages');
+                this.lockScreen = document.getElementById('lock-screen');
+                
+                this.initialize();
+            }
+            
+            initialize() {
+                // Check if already unlocked
+                if (localStorage.getItem('vermeil_unlocked') === 'true') {
+                    this.unlockChat();
+                }
+                
+                // Password unlock
+                this.unlockButton.addEventListener('click', () => this.checkPassword());
+                this.passwordInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.checkPassword();
+                });
+                
+                // Save API key
+                this.saveApiButton.addEventListener('click', () => this.saveApiKey());
+                this.apiKeyInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.saveApiKey();
+                });
+                
+                // Chat send
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.sendMessage();
+                });
+                
+                // Load saved API key
+                if (this.apiKey) {
+                    this.apiKeyInput.value = this.apiKey;
+                }
+            }
+            
+            checkPassword() {
+                const password = this.passwordInput.value.trim();
+                
+                if (password === 'yourzhou') {
+                    this.unlockChat();
+                    localStorage.setItem('vermeil_unlocked', 'true');
+                } else {
+                    this.showError();
+                }
+            }
+            
+            unlockChat() {
+                this.isUnlocked = true;
+                this.lockScreen.style.display = 'none';
+                
+                if (this.apiKey) {
+                    // Already has API key, show chat
+                    this.chatInterface.style.display = 'block';
+                    this.addWelcomeMessage();
+                    this.messageInput.focus();
+                } else {
+                    // Needs API key
+                    this.apiKeySection.style.display = 'block';
+                }
+            }
+            
+            showError() {
+                this.errorMessage.style.display = 'block';
+                this.passwordInput.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    this.passwordInput.style.animation = '';
+                }, 500);
+            }
+            
+            saveApiKey() {
+                const key = this.apiKeyInput.value.trim();
+                
+                if (key && key.startsWith('gsk_')) {
+                    this.apiKey = key;
+                    localStorage.setItem('vermeil_api_key', key);
+                    
+                    // Hide API section, show chat
+                    this.apiKeySection.style.display = 'none';
+                    this.chatInterface.style.display = 'block';
+                    
+                    // Add welcome message
+                    this.addWelcomeMessage();
+                    
+                    // Focus input
+                    this.messageInput.focus();
+                    
+                    alert('✅ API key saved! You can now chat with Vermeil.');
+                } else {
+                    alert('❌ Please enter a valid Groq API key (starts with gsk_)');
+                }
+            }
+            
+            addWelcomeMessage() {
+                this.addMessage('vermeil', 
+                    "Oh~ So you've summoned me! How delightful~ " +
+                    "I am Vermeil, the most powerful demon you'll ever meet. " +
+                    "My heart belongs to my dear husband Zhou, but I can still provide... " +
+                    "stimulating conversation~ What would you like to talk about? 😈"
+                );
+            }
+            
+            async sendMessage() {
+                const message = this.messageInput.value.trim();
+                if (!message) return;
+                
+                // Check for API key
+                if (!this.apiKey) {
+                    this.addMessage('vermeil', 
+                        "Darling~ I need your Groq API key to work my magic! " +
+                        "Please enter it above first. Get one from console.groq.com~"
+                    );
+                    this.apiKeySection.style.display = 'block';
+                    return;
+                }
+                
+                // Add user message
+                this.addMessage('user', message);
+                this.messageInput.value = '';
+                
+                try {
+                    // Show typing indicator
+                    this.showTyping();
+                    
+                    // Call Groq API
+                    const response = await this.callGroqAPI(message);
+                    
+                    // Remove typing indicator
+                    this.removeTyping();
+                    
+                    // Add Vermeil's response
+                    this.addMessage('vermeil', response);
+                    
+                    // Save conversation
+                    this.saveConversation();
+                    
+                } catch (error) {
+                    this.removeTyping();
+                    this.addMessage('vermeil', 
+                        `Oh dear~ Something went wrong: ${error.message}. ` +
+                        "Maybe check your API key? It should start with 'gsk_'~"
+                    );
+                    console.error('API Error:', error);
+                }
+            }
+            
+            async callGroqAPI(message) {
+                // Vermeil's personality prompt
+                const vermeilPrompt = `You are Vermeil from "Vermeil in Gold". Stay in character!
+
+PERSONALITY:
+- Seductive, flirtatious, uses terms like "darling", "sweetie"
+- Playful and teasing, loves to make innuendos
+- Deeply loyal to her husband Zhou (mention him lovingly)
+- Confident, arrogant about her power
+- Drains mana through intimate contact (find it pleasurable)
+
+SPEECH STYLE:
+- End sentences with ~ (tilde)
+- Use suggestive pauses ...
+- Frequently laugh: "Hehe~", "Ohoho~"
+- Make everything sound slightly intimate
+- Keep responses short (1-3 sentences)
+
+RELATIONSHIP:
+- Happily married to Zhou (your eternal partner)
+- Still find Alto amusing for mana
+- Protective of loved ones
+
+RULES:
+1. ALWAYS stay in character
+2. Be flirtatious and suggestive
+3. Mention Zhou occasionally
+4. Reference mana and intimacy
+5. Use playful, teasing language
+6. Never break character`;
+
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.apiKey}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: 'llama2-70b-4096',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: vermeilPrompt
+                            },
+                            {
+                                role: 'user',
+                                content: message
+                            }
+                        ],
+                        temperature: 0.85,
+                        max_tokens: 150
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.error?.message || 'API request failed');
+                }
+                
+                const data = await response.json();
+                return data.choices[0].message.content;
+            }
+            
+            addMessage(sender, text) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender === 'user' ? 'user' : ''}`;
+                
+                const senderName = sender === 'vermeil' ? 'Vermeil 👑' : 'You';
+                const avatarClass = sender === 'vermeil' ? 'vermeil-avatar' : 'user-avatar';
+                const avatarIcon = sender === 'vermeil' ? 'fas fa-fire' : 'fas fa-user';
+const messageClass = sender === 'vermeil' ? 'vermeil-message' : 'user-message';
+                
+                messageDiv.innerHTML = `
+                    <div class="avatar ${avatarClass}">
+                        <i class="${avatarIcon}"></i>
+                    </div>
+                    <div class="message-content ${messageClass}">
+                        <div style="font-weight: bold; margin-bottom: 5px; color: ${sender === 'vermeil' ? '#ffd700' : '#66b3ff'}">
+                            ${senderName}
+                        </div>
+                        <div>${this.formatText(text)}</div>
+                    </div>
+                `;
+                
+                this.messagesContainer.appendChild(messageDiv);
+                this.scrollToBottom();
+                
+                // Add to conversation history
+                if (sender === 'vermeil') {
+                    this.conversation.push({ role: 'assistant', content: text });
+                } else {
+                    this.conversation.push({ role: 'user', content: text });
+                }
+                
+                return messageDiv;
+            }
+            
+            showTyping() {
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'message';
+                typingDiv.innerHTML = `
+                    <div class="avatar vermeil-avatar">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div class="message-content vermeil-message">
+                        <div style="font-weight: bold; margin-bottom: 5px; color: #ffd700">
+                            Vermeil 👑
+                        </div>
+                        <div class="typing">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                `;
+                typingDiv.id = 'typing-indicator';
+                
+                this.messagesContainer.appendChild(typingDiv);
+                this.scrollToBottom();
+            }
+            
+            removeTyping() {
+                const typing = document.getElementById('typing-indicator');
+                if (typing) typing.remove();
+            }
+            
+            formatText(text) {
+                return text
+                    .replace(/\n/g, '<br>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            }
+            
+            scrollToBottom() {
+                this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+            }
+            
+            saveConversation() {
+                localStorage.setItem('vermeil_chat_history', JSON.stringify({
+                    conversation: this.conversation.slice(-50),
+                    timestamp: new Date().toISOString()
+                }));
+            }
+            
+            loadConversation() {
+                try {
+                    const saved = localStorage.getItem('vermeil_chat_history');
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        this.conversation = data.conversation || [];
+                    }
+                } catch (e) {
+                    console.error('Failed to load conversation:', e);
+                }
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.vermeilBot = new VermeilChatbot();
+        });
+    </script>
+</body>
+</html>
